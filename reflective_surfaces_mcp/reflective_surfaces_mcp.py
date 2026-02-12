@@ -8,11 +8,14 @@ Three-layer architecture:
 - Layer 2: Deterministic mapping (zero LLM cost)
 - Layer 3: Synthesis interface (minimal LLM cost)
 
+Phase 2.6: Rhythmic preset composition (temporal oscillations between reflection states)
+Phase 2.7: Attractor visualization prompt generation (parameter → visual keywords)
+
 Cost optimization: ~70% savings vs pure LLM approach.
 """
 
 from fastmcp import FastMCP
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 import json
 import math
 
@@ -888,16 +891,777 @@ def compare_reflection_scenarios(scenarios: str) -> str:
     return json.dumps(comparison, indent=2)
 
 
+# =============================================================================
+# PHASE 2.6: RHYTHMIC PRESET COMPOSITION
+# =============================================================================
+# Normalized 5D parameter space for reflective surface morphospace.
+# Each parameter maps the full taxonomy range to [0.0, 1.0].
+
+REFLECTION_PARAMETER_NAMES = [
+    "reflection_clarity",     # 0.0 = diffuse/scattered → 1.0 = perfect specular mirror
+    "surface_roughness",      # 0.0 = mirror-smooth → 1.0 = heavily frosted/matte
+    "metallic_character",     # 0.0 = dielectric (glass/water) → 1.0 = full metal (chrome/gold)
+    "geometric_distortion",   # 0.0 = flat planar → 1.0 = compound curves/faceted
+    "environmental_drama"     # 0.0 = overcast/soft → 1.0 = night urban/high contrast
+]
+
+REFLECTION_CANONICAL_STATES = {
+    "mirror_still": {
+        "reflection_clarity": 0.95,
+        "surface_roughness": 0.02,
+        "metallic_character": 0.05,
+        "geometric_distortion": 0.00,
+        "environmental_drama": 0.50,
+        "_material_ref": "mirror_glass",
+        "_geometry_ref": "flat",
+        "_description": "Perfect planar mirror, undistorted specular reflection, full clarity"
+    },
+    "chrome_curve": {
+        "reflection_clarity": 0.85,
+        "surface_roughness": 0.05,
+        "metallic_character": 0.95,
+        "geometric_distortion": 0.55,
+        "environmental_drama": 0.45,
+        "_material_ref": "polished_chrome",
+        "_geometry_ref": "convex",
+        "_description": "Polished chrome convex surface, metallic sheen with fisheye compression"
+    },
+    "wet_street": {
+        "reflection_clarity": 0.50,
+        "surface_roughness": 0.30,
+        "metallic_character": 0.00,
+        "geometric_distortion": 0.05,
+        "environmental_drama": 0.95,
+        "_material_ref": "wet_pavement",
+        "_geometry_ref": "flat",
+        "_description": "Rain-slicked urban pavement, neon reflections in dark puddles, high drama"
+    },
+    "rippled_pool": {
+        "reflection_clarity": 0.35,
+        "surface_roughness": 0.40,
+        "metallic_character": 0.00,
+        "geometric_distortion": 0.45,
+        "environmental_drama": 0.55,
+        "_material_ref": "rippled_water",
+        "_geometry_ref": "compound",
+        "_description": "Moving water surface, dancing caustic patterns, warm ambient refraction"
+    },
+    "frosted_pane": {
+        "reflection_clarity": 0.10,
+        "surface_roughness": 0.85,
+        "metallic_character": 0.00,
+        "geometric_distortion": 0.05,
+        "environmental_drama": 0.15,
+        "_material_ref": "frosted_glass",
+        "_geometry_ref": "flat",
+        "_description": "Heavy frosted glass, diffuse scattered glow, soft overcast light"
+    },
+    "copper_facet": {
+        "reflection_clarity": 0.70,
+        "surface_roughness": 0.12,
+        "metallic_character": 0.90,
+        "geometric_distortion": 0.65,
+        "environmental_drama": 0.55,
+        "_material_ref": "copper",
+        "_geometry_ref": "faceted",
+        "_description": "Faceted copper surface, warm orange-tinted fragmented reflections"
+    },
+    "marble_hall": {
+        "reflection_clarity": 0.65,
+        "surface_roughness": 0.18,
+        "metallic_character": 0.05,
+        "geometric_distortion": 0.00,
+        "environmental_drama": 0.40,
+        "_material_ref": "polished_marble",
+        "_geometry_ref": "flat",
+        "_description": "Polished marble floor, luxury architectural reflection with veined pattern"
+    },
+    "gold_dome": {
+        "reflection_clarity": 0.80,
+        "surface_roughness": 0.08,
+        "metallic_character": 1.00,
+        "geometric_distortion": 0.50,
+        "environmental_drama": 0.65,
+        "_material_ref": "gold",
+        "_geometry_ref": "convex",
+        "_description": "Gold convex dome, warm yellow-tinted compressed panoramic reflection"
+    }
+}
+
+
+REFLECTION_RHYTHMIC_PRESETS = {
+    "clarity_sweep": {
+        "state_a": "mirror_still",
+        "state_b": "frosted_pane",
+        "pattern": "sinusoidal",
+        "num_cycles": 3,
+        "steps_per_cycle": 16,
+        "description": "Reflection clarity cycling from perfect specular mirror to heavy diffuse frost"
+    },
+    "urban_drama": {
+        "state_a": "wet_street",
+        "state_b": "chrome_curve",
+        "pattern": "sinusoidal",
+        "num_cycles": 3,
+        "steps_per_cycle": 24,
+        "description": "Alternating between rain-slicked urban puddles and industrial chrome curves"
+    },
+    "material_shift": {
+        "state_a": "copper_facet",
+        "state_b": "mirror_still",
+        "pattern": "sinusoidal",
+        "num_cycles": 3,
+        "steps_per_cycle": 20,
+        "description": "Metallic character transition from warm faceted copper to pure dielectric mirror"
+    },
+    "distortion_wave": {
+        "state_a": "rippled_pool",
+        "state_b": "marble_hall",
+        "pattern": "triangular",
+        "num_cycles": 4,
+        "steps_per_cycle": 15,
+        "description": "Geometric distortion oscillating between moving water caustics and flat stone"
+    },
+    "warmth_cycle": {
+        "state_a": "gold_dome",
+        "state_b": "frosted_pane",
+        "pattern": "sinusoidal",
+        "num_cycles": 2,
+        "steps_per_cycle": 26,
+        "description": "Temperature cycling from warm golden metallic dome to cool diffuse frost"
+    }
+}
+
+
+def _generate_reflection_oscillation(
+    num_steps: int,
+    num_cycles: float,
+    pattern: str
+) -> List[float]:
+    """Generate oscillation alpha values [0, 1] for reflection rhythmic presets."""
+    values = []
+    for i in range(num_steps):
+        t = 2.0 * math.pi * num_cycles * i / num_steps
+
+        if pattern == "sinusoidal":
+            alpha = 0.5 * (1.0 + math.sin(t))
+        elif pattern == "triangular":
+            t_norm = (t / (2.0 * math.pi)) % 1.0
+            alpha = 2.0 * t_norm if t_norm < 0.5 else 2.0 * (1.0 - t_norm)
+        elif pattern == "square":
+            t_norm = (t / (2.0 * math.pi)) % 1.0
+            alpha = 0.0 if t_norm < 0.5 else 1.0
+        else:
+            alpha = 0.5 * (1.0 + math.sin(t))
+
+        values.append(alpha)
+    return values
+
+
+def _get_reflection_state_coords(state_id: str) -> Dict[str, float]:
+    """Get normalized parameter coordinates for a canonical reflection state."""
+    state = REFLECTION_CANONICAL_STATES[state_id]
+    return {p: state[p] for p in REFLECTION_PARAMETER_NAMES}
+
+
+def _interpolate_reflection_states(
+    state_a: Dict[str, float],
+    state_b: Dict[str, float],
+    alpha: float
+) -> Dict[str, float]:
+    """Linear interpolation between two reflection states."""
+    return {
+        p: state_a[p] * (1.0 - alpha) + state_b[p] * alpha
+        for p in REFLECTION_PARAMETER_NAMES
+    }
+
+
+@mcp.tool()
+def list_reflection_rhythmic_presets() -> str:
+    """
+    List all available Phase 2.6 rhythmic presets for reflective surfaces.
+
+    Returns preset names, periods, patterns, state transitions, and descriptions.
+
+    Cost: 0 tokens (dictionary access)
+    """
+    presets = {}
+    for name, cfg in REFLECTION_RHYTHMIC_PRESETS.items():
+        presets[name] = {
+            "state_a": cfg["state_a"],
+            "state_b": cfg["state_b"],
+            "pattern": cfg["pattern"],
+            "num_cycles": cfg["num_cycles"],
+            "steps_per_cycle": cfg["steps_per_cycle"],
+            "total_steps": cfg["num_cycles"] * cfg["steps_per_cycle"],
+            "description": cfg["description"]
+        }
+    return json.dumps({
+        "domain": "reflective_surfaces",
+        "phase": "2.6",
+        "preset_count": len(presets),
+        "presets": presets,
+        "available_periods": sorted(set(
+            cfg["steps_per_cycle"] for cfg in REFLECTION_RHYTHMIC_PRESETS.values()
+        )),
+        "canonical_states": list(REFLECTION_CANONICAL_STATES.keys()),
+        "parameter_names": REFLECTION_PARAMETER_NAMES
+    }, indent=2)
+
+
+@mcp.tool()
+def generate_rhythmic_reflection_sequence(
+    state_a_id: str,
+    state_b_id: str,
+    oscillation_pattern: str = "sinusoidal",
+    num_cycles: int = 3,
+    steps_per_cycle: int = 20,
+    phase_offset: float = 0.0
+) -> str:
+    """
+    Generate rhythmic oscillation between two reflection states.
+
+    Phase 2.6 temporal composition for reflective surfaces.
+    Creates periodic transitions cycling between surface types.
+
+    Args:
+        state_a_id: Starting state (mirror_still, chrome_curve, wet_street, etc.)
+        state_b_id: Alternating state
+        oscillation_pattern: "sinusoidal" | "triangular" | "square"
+        num_cycles: Number of complete A→B→A cycles
+        steps_per_cycle: Samples per cycle (this becomes the period)
+        phase_offset: Starting phase (0.0 = A, 0.5 = B)
+
+    Returns:
+        Sequence with states, pattern info, and phase points
+
+    Cost: 0 tokens (pure arithmetic)
+    """
+    if state_a_id not in REFLECTION_CANONICAL_STATES:
+        return json.dumps({
+            "error": f"Unknown state: {state_a_id}",
+            "available": list(REFLECTION_CANONICAL_STATES.keys())
+        }, indent=2)
+    if state_b_id not in REFLECTION_CANONICAL_STATES:
+        return json.dumps({
+            "error": f"Unknown state: {state_b_id}",
+            "available": list(REFLECTION_CANONICAL_STATES.keys())
+        }, indent=2)
+
+    total_steps = num_cycles * steps_per_cycle
+    alphas = _generate_reflection_oscillation(total_steps, num_cycles, oscillation_pattern)
+
+    if phase_offset > 0:
+        offset_steps = int(phase_offset * steps_per_cycle)
+        alphas = alphas[offset_steps:] + alphas[:offset_steps]
+
+    state_a = _get_reflection_state_coords(state_a_id)
+    state_b = _get_reflection_state_coords(state_b_id)
+
+    sequence = []
+    for i, alpha in enumerate(alphas):
+        state = _interpolate_reflection_states(state_a, state_b, alpha)
+        state["_step"] = i
+        state["_alpha"] = round(alpha, 4)
+        state["_phase"] = round((i % steps_per_cycle) / steps_per_cycle, 4)
+        sequence.append(state)
+
+    return json.dumps({
+        "domain": "reflective_surfaces",
+        "state_a": state_a_id,
+        "state_b": state_b_id,
+        "oscillation_pattern": oscillation_pattern,
+        "num_cycles": num_cycles,
+        "steps_per_cycle": steps_per_cycle,
+        "total_steps": total_steps,
+        "phase_offset": phase_offset,
+        "parameter_names": REFLECTION_PARAMETER_NAMES,
+        "sequence": sequence
+    }, indent=2)
+
+
+@mcp.tool()
+def apply_reflection_rhythmic_preset(preset_name: str) -> str:
+    """
+    Apply a curated reflection rhythmic pattern preset.
+
+    Phase 2.6 convenience tool with pre-configured patterns.
+
+    Available presets:
+    - clarity_sweep: mirror_still ↔ frosted_pane (period 16, specular ↔ diffuse)
+    - urban_drama: wet_street ↔ chrome_curve (period 24, puddle ↔ metal)
+    - material_shift: copper_facet ↔ mirror_still (period 20, metal ↔ dielectric)
+    - distortion_wave: rippled_pool ↔ marble_hall (period 15, caustic ↔ flat)
+    - warmth_cycle: gold_dome ↔ frosted_pane (period 26, warm metal ↔ cool frost)
+
+    Cost: 0 tokens
+    """
+    if preset_name not in REFLECTION_RHYTHMIC_PRESETS:
+        return json.dumps({
+            "error": f"Unknown preset: {preset_name}",
+            "available": list(REFLECTION_RHYTHMIC_PRESETS.keys())
+        }, indent=2)
+
+    cfg = REFLECTION_RHYTHMIC_PRESETS[preset_name]
+    return generate_rhythmic_reflection_sequence(
+        state_a_id=cfg["state_a"],
+        state_b_id=cfg["state_b"],
+        oscillation_pattern=cfg["pattern"],
+        num_cycles=cfg["num_cycles"],
+        steps_per_cycle=cfg["steps_per_cycle"]
+    )
+
+
+@mcp.tool()
+def get_reflection_canonical_states() -> str:
+    """
+    Get all canonical reflection states with normalized parameter coordinates.
+
+    These are the reference points in reflection morphospace used by
+    Phase 2.6 presets and Phase 2.7 visualization.
+
+    Cost: 0 tokens (dictionary access)
+    """
+    states = {}
+    for state_id, state_data in REFLECTION_CANONICAL_STATES.items():
+        states[state_id] = {
+            "coordinates": {p: state_data[p] for p in REFLECTION_PARAMETER_NAMES},
+            "material_ref": state_data["_material_ref"],
+            "geometry_ref": state_data["_geometry_ref"],
+            "description": state_data["_description"]
+        }
+    return json.dumps({
+        "domain": "reflective_surfaces",
+        "parameter_names": REFLECTION_PARAMETER_NAMES,
+        "state_count": len(states),
+        "states": states
+    }, indent=2)
+
+
+# =============================================================================
+# PHASE 2.7: ATTRACTOR VISUALIZATION PROMPT GENERATION
+# =============================================================================
+# Visual vocabulary types mapping parameter coordinates to image-generation
+# keywords. Each type represents a distinct visual archetype in reflection
+# morphospace, identified by nearest-neighbor matching.
+
+REFLECTION_VISUAL_TYPES = {
+    "perfect_mirror": {
+        "coords": {
+            "reflection_clarity": 0.95,
+            "surface_roughness": 0.02,
+            "metallic_character": 0.05,
+            "geometric_distortion": 0.00,
+            "environmental_drama": 0.50
+        },
+        "keywords": [
+            "flawless mirror reflection with perfect clarity",
+            "undistorted specular surface doubling the scene",
+            "silvered glass with razor-sharp reflected image",
+            "planar mirror preserving all angles and proportions",
+            "infinite depth illusion in mirror plane",
+            "crystalline reflection fidelity"
+        ],
+        "optical_properties": {
+            "finish": "perfect_specular",
+            "dominant_wavelength": "scene_faithful",
+            "edge_quality": "razor_sharp",
+            "luminosity": "high_reflected"
+        },
+        "color_associations": [
+            "true-color reflected scene", "silver-neutral surface tone",
+            "deep virtual space behind glass", "clean highlight edges"
+        ]
+    },
+    "metallic_gleam": {
+        "coords": {
+            "reflection_clarity": 0.82,
+            "surface_roughness": 0.07,
+            "metallic_character": 0.95,
+            "geometric_distortion": 0.50,
+            "environmental_drama": 0.55
+        },
+        "keywords": [
+            "polished metal surface with tinted reflections",
+            "lustrous chrome or gold sheen with color cast",
+            "curved metallic body reflecting compressed panorama",
+            "industrial gleam with directional highlight streaks",
+            "warm or cool metallic tint over reflected imagery",
+            "high-fidelity metal reflection with material color"
+        ],
+        "optical_properties": {
+            "finish": "metallic_specular",
+            "dominant_wavelength": "material_tinted",
+            "edge_quality": "sharp_with_color_shift",
+            "luminosity": "high_tinted"
+        },
+        "color_associations": [
+            "chrome silver-blue tint", "copper warm orange cast",
+            "gold rich yellow overlay", "brushed metal directional grain"
+        ]
+    },
+    "rain_noir": {
+        "coords": {
+            "reflection_clarity": 0.50,
+            "surface_roughness": 0.30,
+            "metallic_character": 0.00,
+            "geometric_distortion": 0.05,
+            "environmental_drama": 0.95
+        },
+        "keywords": [
+            "rain-slicked pavement reflecting neon city lights",
+            "wet street mirror with elongated colored streaks",
+            "dark puddle pools capturing inverted urban glow",
+            "high-contrast night reflections on glossy asphalt",
+            "cinematic wet-ground reflection with dramatic atmosphere",
+            "noir lighting doubled in rain-polished surfaces"
+        ],
+        "optical_properties": {
+            "finish": "wet_glossy",
+            "dominant_wavelength": "neon_multicolor",
+            "edge_quality": "soft_elongated",
+            "luminosity": "contrast_extremes"
+        },
+        "color_associations": [
+            "neon pink and blue streaks", "deep black wet asphalt",
+            "sodium yellow streetlight pools", "reflected signage colors"
+        ]
+    },
+    "caustic_dance": {
+        "coords": {
+            "reflection_clarity": 0.35,
+            "surface_roughness": 0.40,
+            "metallic_character": 0.00,
+            "geometric_distortion": 0.45,
+            "environmental_drama": 0.55
+        },
+        "keywords": [
+            "dancing caustic light patterns on moving water",
+            "rippled surface fragmenting reflected scene",
+            "shimmering refracted light network across pool floor",
+            "liquid surface with constantly shifting mirror fragments",
+            "warm water reflections breaking into luminous ribbons",
+            "organic distortion patterns from wave interference"
+        ],
+        "optical_properties": {
+            "finish": "animated_caustic",
+            "dominant_wavelength": "scene_fragmented",
+            "edge_quality": "undulating_soft",
+            "luminosity": "dappled_variable"
+        },
+        "color_associations": [
+            "turquoise water-filtered light", "shifting warm gold patches",
+            "blue-green refracted caustic network", "white dancing highlights"
+        ]
+    },
+    "frost_diffuse": {
+        "coords": {
+            "reflection_clarity": 0.10,
+            "surface_roughness": 0.85,
+            "metallic_character": 0.00,
+            "geometric_distortion": 0.05,
+            "environmental_drama": 0.15
+        },
+        "keywords": [
+            "heavy frosted glass with complete diffusion",
+            "matte translucent surface scattering all light",
+            "soft luminous glow through textured privacy glass",
+            "no distinct reflection only ambient scattered radiance",
+            "ethereal backlit frost with gentle gradients",
+            "ice-crystal surface texture dissolving all imagery"
+        ],
+        "optical_properties": {
+            "finish": "full_diffuse",
+            "dominant_wavelength": "scattered_white",
+            "edge_quality": "fully_dissolved",
+            "luminosity": "low_ambient_glow"
+        },
+        "color_associations": [
+            "milky translucent white", "soft blue-gray scattered light",
+            "pale frost gradient", "warm backlight halo through glass"
+        ]
+    },
+    "faceted_prism": {
+        "coords": {
+            "reflection_clarity": 0.70,
+            "surface_roughness": 0.12,
+            "metallic_character": 0.75,
+            "geometric_distortion": 0.65,
+            "environmental_drama": 0.55
+        },
+        "keywords": [
+            "faceted crystal surface with fragmented reflections",
+            "geometric prismatic separation of reflected scene",
+            "cut-glass or gemstone multi-angle mirror planes",
+            "each facet capturing a different perspective",
+            "sharp-edged geometric reflection kaleidoscope",
+            "architectural glass reflecting in discrete angular panels"
+        ],
+        "optical_properties": {
+            "finish": "faceted_specular",
+            "dominant_wavelength": "prismatic_split",
+            "edge_quality": "sharp_geometric_borders",
+            "luminosity": "high_variable_per_facet"
+        },
+        "color_associations": [
+            "rainbow prismatic edge glints", "clear facet reflection panels",
+            "warm copper or silver tinted planes", "sharp white highlight vertices"
+        ]
+    }
+}
+
+
+def _reflection_param_distance(
+    state: Dict[str, float],
+    target: Dict[str, float]
+) -> float:
+    """Euclidean distance between two states in reflection parameter space."""
+    total = 0.0
+    for p in REFLECTION_PARAMETER_NAMES:
+        diff = state.get(p, 0.5) - target.get(p, 0.5)
+        total += diff * diff
+    return math.sqrt(total)
+
+
+def _find_nearest_reflection_visual_type(
+    state: Dict[str, float]
+) -> Tuple[str, float, Dict[str, Any]]:
+    """Find the nearest visual type to a given parameter state."""
+    best_name = None
+    best_dist = float("inf")
+    best_data = None
+
+    for type_name, type_data in REFLECTION_VISUAL_TYPES.items():
+        dist = _reflection_param_distance(state, type_data["coords"])
+        if dist < best_dist:
+            best_dist = dist
+            best_name = type_name
+            best_data = type_data
+
+    return best_name, best_dist, best_data
+
+
+@mcp.tool()
+def extract_reflection_visual_vocabulary(
+    state: str
+) -> str:
+    """
+    Extract visual vocabulary from reflection parameter coordinates.
+
+    Phase 2.7 tool: Maps a 5D parameter state to the nearest canonical
+    reflection visual type and returns image-generation-ready keywords.
+
+    Uses nearest-neighbor matching against 6 visual types derived from
+    the reflective surfaces taxonomy.
+
+    Args:
+        state: JSON dict with parameter coordinates:
+            reflection_clarity, surface_roughness, metallic_character,
+            geometric_distortion, environmental_drama
+
+    Returns:
+        Dict with nearest_type, distance, keywords,
+        optical_properties, color_associations
+
+    Cost: 0 tokens (pure Layer 2 computation)
+    """
+    try:
+        state_dict = json.loads(state) if isinstance(state, str) else state
+    except json.JSONDecodeError:
+        return json.dumps({"error": "Invalid JSON for state parameter"}, indent=2)
+
+    nearest_name, distance, nearest_data = _find_nearest_reflection_visual_type(state_dict)
+
+    return json.dumps({
+        "nearest_type": nearest_name,
+        "distance": round(distance, 4),
+        "keywords": nearest_data["keywords"],
+        "optical_properties": nearest_data["optical_properties"],
+        "color_associations": nearest_data["color_associations"],
+        "parameter_names": REFLECTION_PARAMETER_NAMES,
+        "input_state": {p: state_dict.get(p, 0.5) for p in REFLECTION_PARAMETER_NAMES}
+    }, indent=2)
+
+
+@mcp.tool()
+def generate_reflection_attractor_prompt(
+    attractor_state: Optional[str] = None,
+    preset_name: Optional[str] = None,
+    mode: str = "composite",
+    style_modifier: str = "",
+    keyframe_count: int = 4
+) -> str:
+    """
+    Generate image prompt from reflection attractor state or rhythmic preset.
+
+    Phase 2.7 tool: Translates mathematical parameter coordinates into
+    visual prompts suitable for image generation (ComfyUI, Stable Diffusion,
+    DALL-E, etc.).
+
+    Modes:
+        composite: Single blended prompt from attractor state
+        sequence: Multiple keyframe prompts from rhythmic preset trajectory
+
+    Args:
+        attractor_state: JSON parameter coordinates dict (for composite mode).
+            If None, uses preset_name to generate from a preset midpoint.
+        preset_name: Rhythmic preset name (for sequence mode, or as
+            source for composite if attractor_state is None).
+        mode: "composite" | "sequence"
+        style_modifier: Optional prefix ("photorealistic", "cinematic", etc.)
+        keyframe_count: Number of keyframes for sequence mode (default: 4)
+
+    Returns:
+        Dict with prompt(s), vocabulary details, and source metadata
+
+    Cost: 0 tokens (Layer 2 deterministic)
+    """
+    if mode == "composite":
+        if attractor_state is not None:
+            try:
+                state_dict = json.loads(attractor_state) if isinstance(attractor_state, str) else attractor_state
+            except json.JSONDecodeError:
+                return json.dumps({"error": "Invalid JSON for attractor_state"}, indent=2)
+        elif preset_name and preset_name in REFLECTION_RHYTHMIC_PRESETS:
+            cfg = REFLECTION_RHYTHMIC_PRESETS[preset_name]
+            sa = _get_reflection_state_coords(cfg["state_a"])
+            sb = _get_reflection_state_coords(cfg["state_b"])
+            state_dict = _interpolate_reflection_states(sa, sb, 0.5)
+        else:
+            state_dict = _get_reflection_state_coords("mirror_still")
+
+        nearest_name, distance, nearest_data = _find_nearest_reflection_visual_type(state_dict)
+
+        keywords = nearest_data["keywords"]
+        colors = nearest_data["color_associations"]
+
+        prompt_parts = []
+        if style_modifier:
+            prompt_parts.append(style_modifier)
+        prompt_parts.extend(keywords)
+        prompt_parts.extend(colors[:2])
+
+        return json.dumps({
+            "mode": "composite",
+            "prompt": ", ".join(prompt_parts),
+            "vocabulary": {
+                "nearest_type": nearest_name,
+                "distance": round(distance, 4),
+                "keywords": keywords,
+                "optical_properties": nearest_data["optical_properties"],
+                "color_associations": colors
+            },
+            "source": {
+                "preset_name": preset_name,
+                "state": {p: round(state_dict.get(p, 0.5), 4)
+                          for p in REFLECTION_PARAMETER_NAMES}
+            }
+        }, indent=2)
+
+    elif mode == "sequence":
+        if not preset_name or preset_name not in REFLECTION_RHYTHMIC_PRESETS:
+            return json.dumps({
+                "error": "sequence mode requires a valid preset_name",
+                "available": list(REFLECTION_RHYTHMIC_PRESETS.keys())
+            }, indent=2)
+
+        cfg = REFLECTION_RHYTHMIC_PRESETS[preset_name]
+        total_steps = cfg["num_cycles"] * cfg["steps_per_cycle"]
+        alphas = _generate_reflection_oscillation(
+            total_steps, cfg["num_cycles"], cfg["pattern"]
+        )
+        sa = _get_reflection_state_coords(cfg["state_a"])
+        sb = _get_reflection_state_coords(cfg["state_b"])
+
+        step_indices = [
+            int(i * (total_steps - 1) / (keyframe_count - 1))
+            for i in range(keyframe_count)
+        ]
+
+        keyframes = []
+        for idx in step_indices:
+            alpha = alphas[idx]
+            state = _interpolate_reflection_states(sa, sb, alpha)
+            nearest_name, distance, nearest_data = _find_nearest_reflection_visual_type(state)
+
+            kw = nearest_data["keywords"]
+            colors = nearest_data["color_associations"]
+
+            prompt_parts = []
+            if style_modifier:
+                prompt_parts.append(style_modifier)
+            prompt_parts.extend(kw)
+            prompt_parts.extend(colors[:2])
+
+            keyframes.append({
+                "step": idx,
+                "alpha": round(alpha, 4),
+                "prompt": ", ".join(prompt_parts),
+                "nearest_type": nearest_name,
+                "distance": round(distance, 4),
+                "state": {p: round(state.get(p, 0.5), 4)
+                          for p in REFLECTION_PARAMETER_NAMES}
+            })
+
+        return json.dumps({
+            "mode": "sequence",
+            "preset": preset_name,
+            "description": cfg["description"],
+            "keyframe_count": keyframe_count,
+            "total_steps": total_steps,
+            "period": cfg["steps_per_cycle"],
+            "keyframes": keyframes
+        }, indent=2)
+
+    else:
+        return json.dumps({
+            "error": f"Unknown mode: {mode}",
+            "available": ["composite", "sequence"]
+        }, indent=2)
+
+
+@mcp.tool()
+def list_reflection_visual_types() -> str:
+    """
+    List all reflection visual vocabulary types for Phase 2.7 prompt generation.
+
+    Returns the 6 canonical visual archetypes with their parameter coordinates,
+    keywords, optical properties, and color associations.
+
+    Cost: 0 tokens (dictionary access)
+    """
+    types = {}
+    for type_name, type_data in REFLECTION_VISUAL_TYPES.items():
+        types[type_name] = {
+            "coords": type_data["coords"],
+            "keyword_count": len(type_data["keywords"]),
+            "keywords_preview": type_data["keywords"][:3],
+            "optical_finish": type_data["optical_properties"]["finish"],
+            "dominant_color": type_data["optical_properties"]["dominant_wavelength"]
+        }
+    return json.dumps({
+        "domain": "reflective_surfaces",
+        "phase": "2.7",
+        "visual_type_count": len(types),
+        "types": types,
+        "usage": "Use extract_reflection_visual_vocabulary(state) to map coordinates to keywords"
+    }, indent=2)
+
+
+# =============================================================================
+# UPDATED DOMAIN INFORMATION (Phase 2.6 + 2.7)
+# =============================================================================
+
 @mcp.tool()
 def get_server_info() -> str:
     """
     Get information about the Reflective Surfaces MCP server.
-    
+
     Returns server metadata, capabilities, and architecture overview.
     """
     return json.dumps({
         "server": "Reflective Surfaces MCP",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "description": "Systematic visual vocabulary for reflective surface aesthetics",
         "architecture": {
             "layer_1": "Pure taxonomy (reflection types, materials, optics)",
@@ -912,13 +1676,53 @@ def get_server_info() -> str:
             "geometry_factors": len(GEOMETRY_FACTORS),
             "environmental_contexts": len(ENVIRONMENTAL_CONTEXTS)
         },
+        "phase_2_6_enhancements": {
+            "rhythmic_composition": True,
+            "preset_count": len(REFLECTION_RHYTHMIC_PRESETS),
+            "available_presets": list(REFLECTION_RHYTHMIC_PRESETS.keys()),
+            "available_periods": sorted(set(
+                cfg["steps_per_cycle"]
+                for cfg in REFLECTION_RHYTHMIC_PRESETS.values()
+            )),
+            "canonical_state_count": len(REFLECTION_CANONICAL_STATES),
+            "canonical_states": list(REFLECTION_CANONICAL_STATES.keys()),
+            "parameter_names": REFLECTION_PARAMETER_NAMES
+        },
+        "phase_2_7_enhancements": {
+            "attractor_visualization": True,
+            "visual_type_count": len(REFLECTION_VISUAL_TYPES),
+            "visual_types": list(REFLECTION_VISUAL_TYPES.keys()),
+            "prompt_modes": ["composite", "sequence"],
+            "supported_generators": [
+                "ComfyUI", "Stable Diffusion", "DALL-E", "Midjourney"
+            ]
+        },
+        "domain_registry_integration": {
+            "domain_id": "reflective_surfaces",
+            "parameter_names": REFLECTION_PARAMETER_NAMES,
+            "preset_periods": sorted(set(
+                cfg["steps_per_cycle"]
+                for cfg in REFLECTION_RHYTHMIC_PRESETS.values()
+            )),
+            "period_interactions": {
+                "shared_with_microscopy": [16, 20, 24],
+                "shared_with_nuclear": [15],
+                "shared_with_catastrophe": [15, 20],
+                "shared_with_diatom": [15, 20],
+                "shared_with_heraldic": [16],
+                "shared_with_spark": [20],
+                "unique_to_reflective": [26]
+            }
+        },
         "key_capabilities": [
             "Fresnel equation calculations",
             "Material optical property lookup",
             "Multi-factor reflection analysis",
             "Keyword detection and extraction",
             "Comparative scenario analysis",
-            "Image prompt enhancement"
+            "Image prompt enhancement",
+            "Phase 2.6 rhythmic preset composition",
+            "Phase 2.7 attractor visualization prompts"
         ],
         "usage_pattern": "Call Layer 2 tools for deterministic analysis, then use results in Layer 3 for creative synthesis",
         "author": "Dal Marsters / Lushy Systems"
