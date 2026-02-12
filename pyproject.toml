@@ -1,23 +1,18 @@
+[project]
+name = "reflective-surfaces-mcp"
+version = "2.0.0"
+description = "Systematic visual vocabulary for mirrors, glass, metal, and liquid reflections — with Phase 2.6 rhythmic presets and Phase 2.7 attractor visualization"
+authors = [{ name = "Dal Marsters" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["fastmcp>=2.0.0"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[project]
-name = "reflective-surfaces-mcp"
-version = "1.0.0"
-description = "Systematic visual vocabulary for reflective surface aesthetics in image generation"
-authors = [
-    {name = "Dal Marsters", email = "dal@lushy.systems"}
-]
-readme = "README.md"
-requires-python = ">=3.10"
-dependencies = [
-    "fastmcp"
-]
+[tool.hatch.build.targets.wheel]
+packages = ["."]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "black>=23.0.0",
-    "ruff>=0.1.0"
-]
+[project.scripts]
+reflective-surfaces-mcp = "reflective_surfaces_mcp:mcp.run"
